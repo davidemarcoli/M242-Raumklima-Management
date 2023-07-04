@@ -11,4 +11,6 @@ const char *password = "";
 const char *ssid = "LERNKUBE";
 const char *passphrase = "l3rnk4b3";
 
+const char *m5stackId = "1";
+
 #endif // BASE_H

@@ -15,19 +15,22 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 public class Main {
-    public static double temperature = 0;
-    public static double humidity = 0;
+//    public static double temperature = 0;
+//    public static double humidity = 0;
     private static Logger logger = Logger.getLogger(Main.class.getName());
     private static Properties config;
     private static InfluxDBClient client;
     private static String influxdbBucket;
     private static String influxdbOrg;
+    private static Integer numOfClients;
 
     private static boolean loadConfig() {
         config = new Properties();
@@ -57,6 +60,8 @@ public class Main {
         influxdbBucket = config.getProperty("influxdb-bucket");
         influxdbOrg = config.getProperty("influxdb-org");
 
+        numOfClients = config.getProperty("num-of-clients") != null ? Integer.parseInt(config.getProperty("num-of-clients")) : 0;
+
         Mqtt mqttClient = new Mqtt("tcp://cloud.tbz.ch:1883", "dalama-server");
         try {
             mqttClient.start();
@@ -67,34 +72,56 @@ public class Main {
 
 //        mqttClient.addHandler((s, mqttMessage) -> System.out.printf("Received message from %s: %s%n", s, mqttMessage.toString()));
 
+        Map<String, SensorData> responses = new ConcurrentHashMap<>();
+
         mqttClient.addHandler(new BiConsumer<String, MqttMessage>() {
             @Override
             public void accept(String s, MqttMessage mqttMessage) {
-                if (s.startsWith("Dalama/temperature/")) {
+                System.out.println(s);
+                System.out.println(mqttMessage.toString());
+                double temperature = 0.0;
+                double humidity = 0.0;
+                if (s.startsWith("Dalama/") && s.endsWith("/temperature")) {
                     temperature = Double.parseDouble(mqttMessage.toString());
                 }
-                if (s.startsWith("Dalama/humidity/")) {
+                if (s.startsWith("Dalama/") && s.endsWith("/humidity")) {
                     humidity = Double.parseDouble(mqttMessage.toString());
                 }
+                SensorData data = new SensorData(temperature, humidity);
+                responses.put(s.split("/")[1].split("/")[0], data);
             }
         });
 
-        double lastTemperature = temperature;
+        double lastTemperature = 0;
+        double lastHumidity = 0;
+        long lastRead = System.currentTimeMillis();
 
         while (true) {
+            Double averageTemperature = responses.values().stream().map(SensorData::temperature).mapToDouble(Number::doubleValue).average().orElse(0);
+            Double averageHumidity = responses.values().stream().map(SensorData::humidity).mapToDouble(Number::doubleValue).average().orElse(0);
+
+            System.out.println(responses.values().size());
+            System.out.println(numOfClients);
+            System.out.println(System.currentTimeMillis() - 60000 > lastRead);
+
             // TODO: change 0.01 to a more realistic value
-            if (Math.abs(lastTemperature - temperature) >= 0.01) {
-                System.out.printf("Temperature changed. Current: %.2f%n", temperature);
+            if ((responses.values().size() == numOfClients || System.currentTimeMillis() - 60000 > lastRead) &&
+                (Math.abs(lastTemperature - averageTemperature) >= 0.01 || Math.abs(lastHumidity - averageHumidity) >= 0.01)) {
+                System.out.printf("Temperature changed. Current: %.2f%n", averageTemperature);
                 Point point = Point
                         .measurement("temperature")
-                        .addTag("host", "host1")
-                        .addField("temperature", temperature)
+//                        .addTag("host", "host1")
+                        .addField("temperature", averageTemperature)
+                        .addField("humidity", averageHumidity)
                         .time(Instant.now(), WritePrecision.NS);
 
                 WriteApiBlocking writeApi = client.getWriteApiBlocking();
                 writeApi.writePoint(influxdbBucket, influxdbOrg, point);
 
-                lastTemperature = temperature;
+                lastTemperature = averageTemperature;
+                lastHumidity = averageHumidity;
+                lastRead = System.currentTimeMillis();
+                responses.clear();
             }
             Thread.sleep(1000);
         }

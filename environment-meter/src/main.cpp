@@ -78,11 +78,15 @@ void loop()
     // Serial.print((stop - start) * 0.001);
     // Serial.print("\t");
     // Serial.print(sht.getTemperature(), 1);
-    mqtt_publish("Dalama/temperature/1", std::to_string(sht.getTemperature()).c_str());
+    std::string temperatureTopic = "Dalama/" + std::string(m5stackId) + "/temperature";
+    mqtt_publish(temperatureTopic.c_str(), std::to_string(sht.getTemperature()).c_str());
+    // mqtt_publish("Dalama/temperature/1", std::to_string(sht.getTemperature()).c_str());
     // Serial.print("\t");
     // Serial.println(sht.getHumidity(), 1);
-    mqtt_publish("Dalama/humidity/1", std::to_string(sht.getHumidity()).c_str());
-    next_sensor_read = millis() + 1000;
+    std::string humidityTopic = "Dalama/" + std::string(m5stackId) + "/humidity";
+    mqtt_publish(humidityTopic.c_str(), std::to_string(sht.getHumidity()).c_str());
+    // mqtt_publish("Dalama/humidity/1", std::to_string(sht.getHumidity()).c_str());
+    next_sensor_read = millis() + 5000;
   }
 
   mqtt_loop();
