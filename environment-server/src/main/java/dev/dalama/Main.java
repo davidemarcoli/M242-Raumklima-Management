@@ -40,7 +40,7 @@ public class Main {
         return false;
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws MqttException {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         builder.hostnameVerifier((hostname, session) -> true);
 
@@ -71,15 +71,13 @@ public class Main {
 
         Map<String, SensorData> responses = new ConcurrentHashMap<>();
 
-        mqttClient.addHandler(new BiConsumer<String, MqttMessage>() {
-            @Override
-            public void accept(String s, MqttMessage mqttMessage) {
-                System.out.println(s);
-                System.out.println(mqttMessage.toString());
+        mqttClient.addHandler((s, mqttMessage) -> {
+            System.out.println(s);
+            System.out.println(mqttMessage.toString());
 //                double temperature = 0.0;
 //                double humidity = 0.0;
-                Gson gson = new Gson();
-                SensorData sensorData = gson.fromJson(mqttMessage.toString(), SensorData.class);
+            Gson gson = new Gson();
+            SensorData sensorData = gson.fromJson(mqttMessage.toString(), SensorData.class);
 
 //                if (s.startsWith("Dalama/") && s.endsWith("/temperature")) {
 //                    temperature = Double.parseDouble(mqttMessage.toString());
@@ -88,8 +86,7 @@ public class Main {
 //                    humidity = Double.parseDouble(mqttMessage.toString());
 //                }
 //                SensorData data = new SensorData(temperature, humidity);
-                responses.put(s.split("/")[1].split("/")[0], sensorData);
-            }
+            responses.put(s.split("/")[1].split("/")[0], sensorData);
         });
 
         double lastTemperature = 0;
@@ -123,6 +120,8 @@ public class Main {
 
                 lastTemperature = averageTemperature;
                 lastHumidity = averageHumidity;
+                SensorData averageData = new SensorData(averageTemperature, averageHumidity);
+                mqttClient.publish("Dalama/average", new Gson().toJson(averageData));
 //                lastRead = System.currentTimeMillis();
 //                responses.clear();
             }
