@@ -1,5 +1,6 @@
 package dev.dalame;
 
+import com.google.gson.Gson;
 import com.influxdb.client.DeleteApi;
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.InfluxDBClientFactory;
@@ -79,16 +80,19 @@ public class Main {
             public void accept(String s, MqttMessage mqttMessage) {
                 System.out.println(s);
                 System.out.println(mqttMessage.toString());
-                double temperature = 0.0;
-                double humidity = 0.0;
-                if (s.startsWith("Dalama/") && s.endsWith("/temperature")) {
-                    temperature = Double.parseDouble(mqttMessage.toString());
-                }
-                if (s.startsWith("Dalama/") && s.endsWith("/humidity")) {
-                    humidity = Double.parseDouble(mqttMessage.toString());
-                }
-                SensorData data = new SensorData(temperature, humidity);
-                responses.put(s.split("/")[1].split("/")[0], data);
+//                double temperature = 0.0;
+//                double humidity = 0.0;
+                Gson gson = new Gson();
+                SensorData sensorData = gson.fromJson(mqttMessage.toString(), SensorData.class);
+
+//                if (s.startsWith("Dalama/") && s.endsWith("/temperature")) {
+//                    temperature = Double.parseDouble(mqttMessage.toString());
+//                }
+//                if (s.startsWith("Dalama/") && s.endsWith("/humidity")) {
+//                    humidity = Double.parseDouble(mqttMessage.toString());
+//                }
+//                SensorData data = new SensorData(temperature, humidity);
+                responses.put(s.split("/")[1].split("/")[0], sensorData);
             }
         });
 

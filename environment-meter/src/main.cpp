@@ -6,6 +6,8 @@
 #include <string>
 #include "SHT85.h"
 #include <bits/stdc++.h>
+#include <ArduinoJson.h>
+
 using namespace std;
 
 #define SHT85_ADDRESS 0x44
@@ -74,18 +76,29 @@ void loop()
     sht.read(); // default = true/fast       slow = false
     uint32_t stop = micros();
 
-    // Serial.print("\t");
-    // Serial.print((stop - start) * 0.001);
-    // Serial.print("\t");
-    // Serial.print(sht.getTemperature(), 1);
-    std::string temperatureTopic = "Dalama/" + std::string(m5stackId) + "/temperature";
-    mqtt_publish(temperatureTopic.c_str(), std::to_string(sht.getTemperature()).c_str());
-    // mqtt_publish("Dalama/temperature/1", std::to_string(sht.getTemperature()).c_str());
-    // Serial.print("\t");
-    // Serial.println(sht.getHumidity(), 1);
-    std::string humidityTopic = "Dalama/" + std::string(m5stackId) + "/humidity";
-    mqtt_publish(humidityTopic.c_str(), std::to_string(sht.getHumidity()).c_str());
-    // mqtt_publish("Dalama/humidity/1", std::to_string(sht.getHumidity()).c_str());
+    // std::string temperatureTopic = "Dalama/" + std::string(m5stackId) + "/temperature";
+    // mqtt_publish(temperatureTopic.c_str(), std::to_string(sht.getTemperature()).c_str());
+    // std::string humidityTopic = "Dalama/" + std::string(m5stackId) + "/humidity";
+    // mqtt_publish(humidityTopic.c_str(), std::to_string(sht.getHumidity()).c_str());
+
+    // Create a StaticJsonDocument.
+    // The number (200) is a size estimate, increase if needed.
+    StaticJsonDocument<200> doc;
+
+    // Set the values.
+    doc["temperature"] = sht.getTemperature();
+    doc["humidity"] = sht.getHumidity();
+
+    // Convert JSON object into a string.
+    String payload;
+    serializeJson(doc, payload);
+
+    // Create topic string.
+    std::string topic = "Dalama/" + std::string(m5stackId);
+
+    // Publish the JSON string.
+    mqtt_publish(topic.c_str(), payload.c_str());
+
     next_sensor_read = millis() + 5000;
   }
 
