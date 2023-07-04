@@ -94,22 +94,23 @@ public class Main {
 
         double lastTemperature = 0;
         double lastHumidity = 0;
-        long lastRead = System.currentTimeMillis();
+//        long lastRead = System.currentTimeMillis();
 
         while (true) {
             Double averageTemperature = responses.values().stream().map(SensorData::temperature).mapToDouble(Number::doubleValue).average().orElse(0);
             Double averageHumidity = responses.values().stream().map(SensorData::humidity).mapToDouble(Number::doubleValue).average().orElse(0);
 
 //            System.out.println(responses.values());
-            System.out.println(responses.values().size() + " == " + numOfClients);
-//            System.out.println(numOfClients);
-            System.out.println(System.currentTimeMillis() - 30000 > lastRead);
-            System.out.println("----------------");
+//           System.out.println(responses.values().size() + " == " + numOfClients);
+////            System.out.println(numOfClients);
+//           System.out.println(System.currentTimeMillis() - 30000 > lastRead);
+//           System.out.println("----------------");
 
             // TODO: change 0.01 to a more realistic value
             if (responses.values().size() > 0 && (/*(responses.values().size() == numOfClients || System.currentTimeMillis() - 30000 > lastRead) &&*/
                 (Math.abs(lastTemperature - averageTemperature) >= 0.1 || Math.abs(lastHumidity - averageHumidity) >= 0.1))) {
                 System.out.printf("Temperature changed. Current: %.2f%n", averageTemperature);
+                System.out.printf("Humidity changed. Current: %.2f%n", averageHumidity);
                 Point point = Point
                         .measurement("room-environment")
 //                        .addTag("host", "host1")
@@ -122,10 +123,10 @@ public class Main {
 
                 lastTemperature = averageTemperature;
                 lastHumidity = averageHumidity;
-                lastRead = System.currentTimeMillis();
+//                lastRead = System.currentTimeMillis();
 //                responses.clear();
             }
-            Thread.sleep(1000);
+//            Thread.sleep(1000);
         }
     }
 }
