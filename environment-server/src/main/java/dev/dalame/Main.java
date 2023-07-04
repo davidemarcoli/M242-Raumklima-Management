@@ -100,16 +100,17 @@ public class Main {
             Double averageTemperature = responses.values().stream().map(SensorData::temperature).mapToDouble(Number::doubleValue).average().orElse(0);
             Double averageHumidity = responses.values().stream().map(SensorData::humidity).mapToDouble(Number::doubleValue).average().orElse(0);
 
+            System.out.println(responses.values());
             System.out.println(responses.values().size());
             System.out.println(numOfClients);
             System.out.println(System.currentTimeMillis() - 60000 > lastRead);
 
             // TODO: change 0.01 to a more realistic value
-            if ((responses.values().size() == numOfClients || System.currentTimeMillis() - 60000 > lastRead) &&
-                (Math.abs(lastTemperature - averageTemperature) >= 0.01 || Math.abs(lastHumidity - averageHumidity) >= 0.01)) {
+            if (responses.values().size() > 0 && ((responses.values().size() == numOfClients || System.currentTimeMillis() - 60000 > lastRead) &&
+                (Math.abs(lastTemperature - averageTemperature) >= 0.01 || Math.abs(lastHumidity - averageHumidity) >= 0.01))) {
                 System.out.printf("Temperature changed. Current: %.2f%n", averageTemperature);
                 Point point = Point
-                        .measurement("temperature")
+                        .measurement("room-environment")
 //                        .addTag("host", "host1")
                         .addField("temperature", averageTemperature)
                         .addField("humidity", averageHumidity)
