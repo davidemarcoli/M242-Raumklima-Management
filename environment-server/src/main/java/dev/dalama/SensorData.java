@@ -1,4 +1,4 @@
-package dev.dalame;
+package dev.dalama;
 
 public record SensorData(Double temperature, Double humidity) {
     public SensorData() {

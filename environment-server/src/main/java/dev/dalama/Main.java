@@ -1,11 +1,9 @@
-package dev.dalame;
+package dev.dalama;
 
 import com.google.gson.Gson;
-import com.influxdb.client.DeleteApi;
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.InfluxDBClientFactory;
 import com.influxdb.client.WriteApiBlocking;
-import com.influxdb.client.domain.DeletePredicateRequest;
 import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.client.write.Point;
 import okhttp3.OkHttpClient;
@@ -15,13 +13,11 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 public class Main {
 //    public static double temperature = 0;
@@ -104,14 +100,15 @@ public class Main {
             Double averageTemperature = responses.values().stream().map(SensorData::temperature).mapToDouble(Number::doubleValue).average().orElse(0);
             Double averageHumidity = responses.values().stream().map(SensorData::humidity).mapToDouble(Number::doubleValue).average().orElse(0);
 
-            System.out.println(responses.values());
-            System.out.println(responses.values().size());
-            System.out.println(numOfClients);
-            System.out.println(System.currentTimeMillis() - 60000 > lastRead);
+//            System.out.println(responses.values());
+            System.out.println(responses.values().size() + " == " + numOfClients);
+//            System.out.println(numOfClients);
+            System.out.println(System.currentTimeMillis() - 30000 > lastRead);
+            System.out.println("----------------");
 
             // TODO: change 0.01 to a more realistic value
-            if (responses.values().size() > 0 && ((responses.values().size() == numOfClients || System.currentTimeMillis() - 60000 > lastRead) &&
-                (Math.abs(lastTemperature - averageTemperature) >= 0.01 || Math.abs(lastHumidity - averageHumidity) >= 0.01))) {
+            if (responses.values().size() > 0 && (/*(responses.values().size() == numOfClients || System.currentTimeMillis() - 30000 > lastRead) &&*/
+                (Math.abs(lastTemperature - averageTemperature) >= 0.1 || Math.abs(lastHumidity - averageHumidity) >= 0.1))) {
                 System.out.printf("Temperature changed. Current: %.2f%n", averageTemperature);
                 Point point = Point
                         .measurement("room-environment")
@@ -126,7 +123,7 @@ public class Main {
                 lastTemperature = averageTemperature;
                 lastHumidity = averageHumidity;
                 lastRead = System.currentTimeMillis();
-                responses.clear();
+//                responses.clear();
             }
             Thread.sleep(1000);
         }

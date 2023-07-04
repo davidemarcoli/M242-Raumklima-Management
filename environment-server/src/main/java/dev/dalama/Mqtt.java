@@ -1,4 +1,4 @@
-package dev.dalame;
+package dev.dalama;
 
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
