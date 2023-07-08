@@ -2,8 +2,8 @@ const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('temperature')
-        .setDescription('Get a graph of the temperature in the room.')
+        .setName('humidity')
+        .setDescription('Get a graph of the humidity in the room.')
         .addStringOption(option =>
             option.setName('range').setDescription('The range of the graph.')
         ),
@@ -23,8 +23,7 @@ module.exports = {
         console.log("Current timestamp: " + currentTimestamp)
         console.log("Six hours ago: " + startTimestamp)
         console.log(`https://server.davidemarcoli.dev/render/d-solo/a5c0b3cc-81cd-4d5d-98f6-d3f6f4c2dff7/env-iii?orgId=1&from=${startTimestamp}&to=${currentTimestamp}&panelId=2&width=1000&height=500&tz=Europe%2FZurich`)
-        // await interaction.editReply({files: [{attachment: `https://server.davidemarcoli.dev/render/d-solo/a5c0b3cc-81cd-4d5d-98f6-d3f6f4c2dff7/env-iii?orgId=1&from=${startTimestamp}&to=${currentTimestamp}&panelId=2&width=1000&height=500&tz=Europe%2FZurich`, name: `temperature.png`}]});
-        await interaction.editReply({files: [{attachment: `https://server.davidemarcoli.dev/render/d-solo/a5c0b3cc-81cd-4d5d-98f6-d3f6f4c2dff7/env-iii?orgId=1&from=${startTimestamp}&to=${currentTimestamp}&panelId=1&width=1000&height=500&tz=Europe%2FZurich`, name: `temperature.png`}]});
+        await interaction.editReply({files: [{attachment: `https://server.davidemarcoli.dev/render/d-solo/a5c0b3cc-81cd-4d5d-98f6-d3f6f4c2dff7/env-iii?orgId=1&from=${startTimestamp}&to=${currentTimestamp}&panelId=2&width=1000&height=500&tz=Europe%2FZurich`, name: `temperature.png`}]});
     },
 };
 
