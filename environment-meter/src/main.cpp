@@ -18,16 +18,67 @@ unsigned long next_lv_task = 0;
 unsigned long next_sensor_read = 0;
 
 lv_obj_t *temperature_label;
+lv_obj_t *humidity_label;
 
 void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
-  // Parse Payload into String
+  /*// Parse Payload into String
   char *buf = (char *)malloc((sizeof(char) * (length + 1)));
   memcpy(buf, payload, length);
   buf[length] = '\0';
   String payloadS = String(buf);
   payloadS.trim();
   Serial.println(payloadS);
+  StaticJsonDocument<200> doc;
+  deserializeJson(doc, payloadS);
+  JsonObject obj = doc.as<JsonObject>();
+  float test = obj["temperature"];
+  char *test2 = obj["temperature"];
+  Serial.println(test2);
+  lv_label_set_text(temperature_label, test2);
+  // lv_label_set_text(temperature_label, "temperature");*/
+
+  // Parse Payload into String
+  char *buf = (char *)malloc((sizeof(char) * (length + 1)));
+  memcpy(buf, payload, length);
+  buf[length] = '\0';
+  Serial.println(buf);
+  StaticJsonDocument<200> doc;
+  deserializeJson(doc, buf);
+  JsonObject obj = doc.as<JsonObject>();
+
+  serializeJsonPretty(obj, Serial);
+  Serial.println();
+
+  float temperature_value = obj["temperature"];
+  Serial.println(temperature_value);
+
+  float humidity_value = obj["humidity"];
+  Serial.println(humidity_value);
+
+  /*const char *test2 = obj["temperature"]; // Note that I changed this to a const char*
+
+  if (test2 == nullptr)
+  {
+    Serial.println(F("Didn't find 'temperature' in the JSON"));
+  }
+  else
+  {
+    Serial.println(test2);
+  }*/
+
+  // Serial.println(test2);
+
+  // Convert float to String
+  String temperature_string = String(temperature_value);
+  String humidity_string = String(humidity_value);
+
+  // Get char* from the String
+  const char *temperature_char = temperature_string.c_str();
+  const char *humidity_char = humidity_string.c_str();
+
+  lv_label_set_text(temperature_label, temperature_char);
+  lv_label_set_text(humidity_label, humidity_char);
 }
 
 SHT85 sht;
@@ -59,7 +110,8 @@ void setup()
   mqtt_init(mqtt_callback);
   close_message_box(wifiConnectingBox);
 
-  temperature_label = add_label("Test", 80, 50);
+  temperature_label = add_label("Temperature", 80, 50);
+  humidity_label = add_label("Humidity", 80, 100);
   lv_obj_set_state(temperature_label, LV_STATE_DEFAULT);
 }
 

@@ -46,7 +46,7 @@ void mqtt_re_connect()
     if (client.connect(clientId))
     {
       // Define subscriptions here
-      client.subscribe("Dalame/average/#");
+      client.subscribe("Dalama/average");
     }
     else
     {

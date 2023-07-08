@@ -8,8 +8,8 @@ const char *username = "";
 const char *password = "";
 
 // WiFi configuration
-const char *ssid = "LERNKUBE";
-const char *passphrase = "l3rnk4b3";
+const char *ssid = "XMZ-28049";
+const char *passphrase = "Uhsd(2)shTuH#Chile";
 
 const char *m5stackId = "1";
 

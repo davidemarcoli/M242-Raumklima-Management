@@ -76,6 +76,9 @@ public class Main {
             System.out.println(mqttMessage.toString());
 //                double temperature = 0.0;
 //                double humidity = 0.0;
+
+            if (s.equals("Dalama/average")) return;
+
             Gson gson = new Gson();
             SensorData sensorData = gson.fromJson(mqttMessage.toString(), SensorData.class);
 
