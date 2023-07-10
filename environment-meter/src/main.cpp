@@ -20,24 +20,11 @@ unsigned long next_sensor_read = 0;
 lv_obj_t *temperature_label;
 lv_obj_t *humidity_label;
 
+lv_obj_t *avg_temperature_label;
+lv_obj_t *avg_humidity_label;
+
 void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
-  /*// Parse Payload into String
-  char *buf = (char *)malloc((sizeof(char) * (length + 1)));
-  memcpy(buf, payload, length);
-  buf[length] = '\0';
-  String payloadS = String(buf);
-  payloadS.trim();
-  Serial.println(payloadS);
-  StaticJsonDocument<200> doc;
-  deserializeJson(doc, payloadS);
-  JsonObject obj = doc.as<JsonObject>();
-  float test = obj["temperature"];
-  char *test2 = obj["temperature"];
-  Serial.println(test2);
-  lv_label_set_text(temperature_label, test2);
-  // lv_label_set_text(temperature_label, "temperature");*/
-
   // Parse Payload into String
   char *buf = (char *)malloc((sizeof(char) * (length + 1)));
   memcpy(buf, payload, length);
@@ -56,29 +43,19 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
   float humidity_value = obj["humidity"];
   Serial.println(humidity_value);
 
-  /*const char *test2 = obj["temperature"]; // Note that I changed this to a const char*
-
-  if (test2 == nullptr)
-  {
-    Serial.println(F("Didn't find 'temperature' in the JSON"));
-  }
-  else
-  {
-    Serial.println(test2);
-  }*/
-
-  // Serial.println(test2);
-
   // Convert float to String
   String temperature_string = String(temperature_value);
   String humidity_string = String(humidity_value);
 
-  // Get char* from the String
-  const char *temperature_char = temperature_string.c_str();
-  const char *humidity_char = humidity_string.c_str();
+  String temp = "Avg Temperature: " + temperature_string + "°C";
+  String hum = "Avg Humidity: " + humidity_string + "%";
 
-  lv_label_set_text(temperature_label, temperature_char);
-  lv_label_set_text(humidity_label, humidity_char);
+  // Get char* from the String
+  const char *temperature_char = temp.c_str();
+  const char *humidity_char = hum.c_str();
+
+  lv_label_set_text(avg_temperature_label, temperature_char);
+  lv_label_set_text(avg_humidity_label, humidity_char);
 }
 
 SHT85 sht;
@@ -110,9 +87,10 @@ void setup()
   mqtt_init(mqtt_callback);
   close_message_box(wifiConnectingBox);
 
-  temperature_label = add_label("Temperature", 80, 50);
-  humidity_label = add_label("Humidity", 80, 100);
-  lv_obj_set_state(temperature_label, LV_STATE_DEFAULT);
+  avg_temperature_label = add_label("", 80, 50);
+  avg_humidity_label = add_label("", 80, 100);
+
+  lv_obj_set_state(avg_temperature_label, LV_STATE_DEFAULT);
 }
 
 void loop()
@@ -127,6 +105,9 @@ void loop()
     uint32_t start = micros();
     sht.read(); // default = true/fast       slow = false
     uint32_t stop = micros();
+
+    lv_label_set_text(temperature_label, String(sht.getTemperature()).c_str());
+    lv_label_set_text(humidity_label, String(sht.getHumidity()).c_str());
 
     // std::string temperatureTopic = "Dalama/" + std::string(m5stackId) + "/temperature";
     // mqtt_publish(temperatureTopic.c_str(), std::to_string(sht.getTemperature()).c_str());
