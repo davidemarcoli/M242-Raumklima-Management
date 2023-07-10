@@ -87,6 +87,9 @@ void setup()
   mqtt_init(mqtt_callback);
   close_message_box(wifiConnectingBox);
 
+  temperature_label = add_label("Current Temperature", 80, 150);
+  humidity_label = add_label("Current Humidity", 80, 200);
+
   avg_temperature_label = add_label("Temperature", 80, 50);
   avg_humidity_label = add_label("Humidity", 80, 100);
 
@@ -105,9 +108,6 @@ void loop()
     uint32_t start = micros();
     sht.read(); // default = true/fast       slow = false
     uint32_t stop = micros();
-
-    temperature_label = add_label("Current Temperature", 80, 150);
-    humidity_label = add_label("Current Humidity", 80, 200);
 
     lv_label_set_text(temperature_label, String(sht.getTemperature()).c_str());
     lv_label_set_text(humidity_label, String(sht.getHumidity()).c_str());
