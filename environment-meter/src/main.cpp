@@ -6,6 +6,8 @@
 #include <string>
 #include "SHT85.h"
 #include <bits/stdc++.h>
+#include <ArduinoJson.h>
+
 using namespace std;
 
 #define SHT85_ADDRESS 0x44
@@ -16,6 +18,10 @@ unsigned long next_lv_task = 0;
 unsigned long next_sensor_read = 0;
 
 lv_obj_t *temperature_label;
+lv_obj_t *humidity_label;
+
+lv_obj_t *avg_temperature_label;
+lv_obj_t *avg_humidity_label;
 
 void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
@@ -23,9 +29,33 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
   char *buf = (char *)malloc((sizeof(char) * (length + 1)));
   memcpy(buf, payload, length);
   buf[length] = '\0';
-  String payloadS = String(buf);
-  payloadS.trim();
-  Serial.println(payloadS);
+  Serial.println(buf);
+  StaticJsonDocument<200> doc;
+  deserializeJson(doc, buf);
+  JsonObject obj = doc.as<JsonObject>();
+
+  serializeJsonPretty(obj, Serial);
+  Serial.println();
+
+  float temperature_value = obj["temperature"];
+  Serial.println(temperature_value);
+
+  float humidity_value = obj["humidity"];
+  Serial.println(humidity_value);
+
+  // Convert float to String
+  String temperature_string = String(temperature_value);
+  String humidity_string = String(humidity_value);
+
+  String temp = "Avg Temperature: " + temperature_string + "°C";
+  String hum = "Avg Humidity: " + humidity_string + "%";
+
+  // Get char* from the String
+  const char *temperature_char = temp.c_str();
+  const char *humidity_char = hum.c_str();
+
+  lv_label_set_text(avg_temperature_label, temperature_char);
+  lv_label_set_text(avg_humidity_label, humidity_char);
 }
 
 SHT85 sht;
@@ -57,8 +87,13 @@ void setup()
   mqtt_init(mqtt_callback);
   close_message_box(wifiConnectingBox);
 
-  temperature_label = add_label("Test", 80, 50);
-  lv_obj_set_state(temperature_label, LV_STATE_DEFAULT);
+  temperature_label = add_label("Current Temperature", 60, 50);
+  humidity_label = add_label("Current Humidity", 60, 100);
+
+  avg_temperature_label = add_label("Temperature", 60, 150);
+  avg_humidity_label = add_label("Humidity", 60, 200);
+
+  lv_obj_set_state(avg_temperature_label, LV_STATE_DEFAULT);
 }
 
 void loop()
@@ -74,15 +109,31 @@ void loop()
     sht.read(); // default = true/fast       slow = false
     uint32_t stop = micros();
 
-    // Serial.print("\t");
-    // Serial.print((stop - start) * 0.001);
-    // Serial.print("\t");
-    // Serial.print(sht.getTemperature(), 1);
-    mqtt_publish("Dalama/temperature/1", std::to_string(sht.getTemperature()).c_str());
-    // Serial.print("\t");
-    // Serial.println(sht.getHumidity(), 1);
-    mqtt_publish("Dalama/humidity/1", std::to_string(sht.getHumidity()).c_str());
-    next_sensor_read = millis() + 1000;
+    String current_temp = "Curr. Temperature: " + String(sht.getTemperature()) + "°C";
+    String current_hum = "Curr. Humidity: " + String(sht.getHumidity()) + "%";
+
+    lv_label_set_text(temperature_label, current_temp.c_str());
+    lv_label_set_text(humidity_label, current_hum.c_str());
+
+    // Create a StaticJsonDocument.
+    // The number (200) is a size estimate, increase if needed.
+    StaticJsonDocument<200> doc;
+
+    // Set the values.
+    doc["temperature"] = sht.getTemperature();
+    doc["humidity"] = sht.getHumidity();
+
+    // Convert JSON object into a string.
+    String payload;
+    serializeJson(doc, payload);
+
+    // Create topic string.
+    std::string topic = "Dalama/" + std::string(m5stackId);
+
+    // Publish the JSON string.
+    mqtt_publish(topic.c_str(), payload.c_str());
+
+    next_sensor_read = millis() + 5000;
   }
 
   mqtt_loop();

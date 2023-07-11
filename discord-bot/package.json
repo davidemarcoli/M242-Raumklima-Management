@@ -1,5 +1,5 @@
 {
-  "name": "Simple-discordjs-Bot-Template",
+  "name": "room-environment-bot",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^12.4.1"
+    "discord.js": "^14.11.0"
   }
 }

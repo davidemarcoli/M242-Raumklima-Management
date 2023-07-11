@@ -8,4 +8,6 @@ extern const char *password;
 extern const char *ssid;
 extern const char *passphrase;
 
+extern const char *m5stackId;
+
 #endif // BASE_H
