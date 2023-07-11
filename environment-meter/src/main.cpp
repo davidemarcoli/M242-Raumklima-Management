@@ -87,11 +87,11 @@ void setup()
   mqtt_init(mqtt_callback);
   close_message_box(wifiConnectingBox);
 
-  temperature_label = add_label("Current Temperature", 80, 150);
-  humidity_label = add_label("Current Humidity", 80, 200);
+  temperature_label = add_label("Current Temperature", 60, 50);
+  humidity_label = add_label("Current Humidity", 60, 100);
 
-  avg_temperature_label = add_label("Temperature", 80, 50);
-  avg_humidity_label = add_label("Humidity", 80, 100);
+  avg_temperature_label = add_label("Temperature", 60, 150);
+  avg_humidity_label = add_label("Humidity", 60, 200);
 
   lv_obj_set_state(avg_temperature_label, LV_STATE_DEFAULT);
 }
@@ -109,13 +109,11 @@ void loop()
     sht.read(); // default = true/fast       slow = false
     uint32_t stop = micros();
 
-    lv_label_set_text(temperature_label, String(sht.getTemperature()).c_str());
-    lv_label_set_text(humidity_label, String(sht.getHumidity()).c_str());
+    String current_temp = "Curr. Temperature: " + String(sht.getTemperature()) + "°C";
+    String current_hum = "Curr. Humidity: " + String(sht.getHumidity()) + "%";
 
-    // std::string temperatureTopic = "Dalama/" + std::string(m5stackId) + "/temperature";
-    // mqtt_publish(temperatureTopic.c_str(), std::to_string(sht.getTemperature()).c_str());
-    // std::string humidityTopic = "Dalama/" + std::string(m5stackId) + "/humidity";
-    // mqtt_publish(humidityTopic.c_str(), std::to_string(sht.getHumidity()).c_str());
+    lv_label_set_text(temperature_label, current_temp.c_str());
+    lv_label_set_text(humidity_label, current_hum.c_str());
 
     // Create a StaticJsonDocument.
     // The number (200) is a size estimate, increase if needed.

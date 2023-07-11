@@ -48,9 +48,6 @@ public class Main {
 
         logger.info("Config file loaded");
 
-//        InfluxDBClientOptions options = InfluxDBClientOptions.builder().url(config.getProperty("influxdb-url")).authenticateToken(config.getProperty("influxdb-token").toCharArray()).build();
-//        client = InfluxDBClientFactory.create(options);
-
         client = InfluxDBClientFactory.create(config.getProperty("influxdb-url"),
                 config.getProperty("influxdb-token").toCharArray());
 
@@ -67,28 +64,16 @@ public class Main {
             e.printStackTrace();
         }
 
-//        mqttClient.addHandler((s, mqttMessage) -> System.out.printf("Received message from %s: %s%n", s, mqttMessage.toString()));
-
         Map<String, SensorData> responses = new ConcurrentHashMap<>();
 
         mqttClient.addHandler((s, mqttMessage) -> {
             System.out.println(s);
             System.out.println(mqttMessage.toString());
-//                double temperature = 0.0;
-//                double humidity = 0.0;
 
             if (s.equals("Dalama/average")) return;
 
             Gson gson = new Gson();
             SensorData sensorData = gson.fromJson(mqttMessage.toString(), SensorData.class);
-
-//                if (s.startsWith("Dalama/") && s.endsWith("/temperature")) {
-//                    temperature = Double.parseDouble(mqttMessage.toString());
-//                }
-//                if (s.startsWith("Dalama/") && s.endsWith("/humidity")) {
-//                    humidity = Double.parseDouble(mqttMessage.toString());
-//                }
-//                SensorData data = new SensorData(temperature, humidity);
             responses.put(s.split("/")[1].split("/")[0], sensorData);
         });
 
@@ -100,20 +85,12 @@ public class Main {
             Double averageTemperature = responses.values().stream().map(SensorData::temperature).mapToDouble(Number::doubleValue).average().orElse(0);
             Double averageHumidity = responses.values().stream().map(SensorData::humidity).mapToDouble(Number::doubleValue).average().orElse(0);
 
-//            System.out.println(responses.values());
-//           System.out.println(responses.values().size() + " == " + numOfClients);
-////            System.out.println(numOfClients);
-//           System.out.println(System.currentTimeMillis() - 30000 > lastRead);
-//           System.out.println("----------------");
-
-            // TODO: change 0.01 to a more realistic value
             if (responses.values().size() > 0 && (/*(responses.values().size() == numOfClients || System.currentTimeMillis() - 30000 > lastRead) &&*/
                 (Math.abs(lastTemperature - averageTemperature) >= 0.1 || Math.abs(lastHumidity - averageHumidity) >= 0.1))) {
                 System.out.printf("Temperature changed. Current: %.2f%n", averageTemperature);
                 System.out.printf("Humidity changed. Current: %.2f%n", averageHumidity);
                 Point point = Point
                         .measurement("room-environment")
-//                        .addTag("host", "host1")
                         .addField("temperature", averageTemperature)
                         .addField("humidity", averageHumidity)
                         .time(Instant.now(), WritePrecision.NS);
@@ -125,10 +102,7 @@ public class Main {
                 lastHumidity = averageHumidity;
                 SensorData averageData = new SensorData(averageTemperature, averageHumidity);
                 mqttClient.publish("Dalama/average", new Gson().toJson(averageData));
-//                lastRead = System.currentTimeMillis();
-//                responses.clear();
             }
-//            Thread.sleep(1000);
         }
     }
 }
